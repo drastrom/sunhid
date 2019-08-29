@@ -238,8 +238,8 @@ if test "$with_dfu" = "yes"; then
       exit 1
   fi
   echo "Configured for DFU"
-  ORIGIN=0x08003000
-  FLASH_SIZE=$((FLASH_SIZE - 12))
+  ORIGIN=0x08002000
+  FLASH_SIZE=$((FLASH_SIZE - 8))
   DFU_DEFINE="#define DFU_SUPPORT 1"
 else
   with_dfu=no
