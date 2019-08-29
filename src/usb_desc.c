@@ -133,7 +133,7 @@ static const uint8_t config_desc[] = {
 
 
 /* USB String Descriptors */
-static const uint8_t template_string_lang_id[] = {
+static const uint8_t sunhid_string_lang_id[] = {
   4,				/* bLength */
   STRING_DESCRIPTOR,
   0x09, 0x04			/* LangID = 0x0409: US-English */
@@ -149,12 +149,12 @@ struct desc
 };
 
 static const struct desc string_descriptors[] = {
-  {template_string_lang_id, sizeof (template_string_lang_id)},
-  {template_string_vendor, sizeof (template_string_vendor)},
-  {template_string_product, sizeof (template_string_product)},
-  {template_string_serial, sizeof (template_string_serial)},
-  {template_revision_detail, sizeof (template_revision_detail)},
-  {template_config_options, sizeof (template_config_options)},
+  {sunhid_string_lang_id, sizeof (sunhid_string_lang_id)},
+  {sunhid_string_vendor, sizeof (sunhid_string_vendor)},
+  {sunhid_string_product, sizeof (sunhid_string_product)},
+  {sunhid_string_serial, sizeof (sunhid_string_serial)},
+  {sunhid_revision_detail, sizeof (sunhid_revision_detail)},
+  {sunhid_config_options, sizeof (sunhid_config_options)},
   {sys_version, sizeof (sys_version)},
 };
 #define NUM_STRING_DESC (sizeof (string_descriptors) / sizeof (struct desc))

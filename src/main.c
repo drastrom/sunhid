@@ -41,7 +41,7 @@
 #endif
 
 /* shit from gnuk.h */
-extern const uint8_t template_string_serial[];
+extern const uint8_t sunhid_string_serial[];
 
 #define LED_ONESHOT		  1
 #define LED_TWOSHOTS		  2
@@ -73,7 +73,7 @@ uint8_t *flash_addr_data_storage_start;
 static void
 device_initialize_once (void)
 {
-  const uint8_t *p = &template_string_serial[ID_OFFSET];
+  const uint8_t *p = &sunhid_string_serial[ID_OFFSET];
 
   if (p[0] == 0xff && p[1] == 0xff && p[2] == 0xff && p[3] == 0xff)
     {
