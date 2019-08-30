@@ -44,6 +44,8 @@ void led_blink(int spec);
 
 #endif
 
+#include "usb_hid.h"
+
 #ifdef ENABLE_VIRTUAL_COM_PORT
 #include "usb-cdc.h"
 
@@ -97,8 +99,12 @@ setup_endpoints_for_interface (struct usb_dev *dev,
   (void)dev;
 #endif
 
+  if (interface == HID_INTERFACE_0 || interface == HID_INTERFACE_1)
+    {
+      hid_setup_endpoints(dev, interface, stop);
+    }
 #ifdef ENABLE_VIRTUAL_COM_PORT
-  if (interface == VCOM_INTERFACE_0)
+  else if (interface == VCOM_INTERFACE_0)
     {
       if (!stop)
 #ifdef GNU_LINUX_EMULATION
@@ -236,8 +242,10 @@ usb_setup (struct usb_dev *dev)
     }
   else if (type_rcp == (CLASS_REQUEST | INTERFACE_RECIPIENT))
     {
+      if (arg->index == HID_INTERFACE_0 || arg->index == HID_INTERFACE_1)
+        return hid_data_setup(dev, arg->index);
 #ifdef ENABLE_VIRTUAL_COM_PORT
-      if (arg->index == VCOM_INTERFACE_0)
+      else if (arg->index == VCOM_INTERFACE_0)
 	return vcom_port_data_setup (dev);
 #endif
     }

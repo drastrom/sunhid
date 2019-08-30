@@ -14,6 +14,78 @@
 
 #define W_LENGTH(x) ((x)&0xFF), (((x)>>8)&0xFF)
 
+/* Keyboard HID report descriptor. */
+#define KEYB_HID_REPORT_DESC_SIZE (sizeof(keyb_report_desc))
+
+static const uint8_t keyb_report_desc[] = {
+  0x05, 0x01,	    /* USAGE_PAGE (Generic Desktop) */
+  0x09, 0x06,	    /* USAGE (Keyboard) */
+  0xa1, 0x01,	    /* COLLECTION (Application) */
+  0x75, 0x01,	    /*   REPORT_SIZE (1) */
+  0x95, 0x08,	    /*   REPORT_COUNT (8) */
+  0x05, 0x07,	    /*   USAGE_PAGE (Keyboard/Keypad) */
+  0x19, 0xe0,	    /*   USAGE_MINIMUM (Keyboard LeftControl) */
+  0x29, 0xe7,	    /*   USAGE_MAXIMUM (Keyboard Right GUI) */
+  0x15, 0x00,	    /*   LOGICAL_MINIMUM (0) */
+  0x25, 0x01,	    /*   LOGICAL_MAXIMUM (1) */
+  0x81, 0x02,	    /*   INPUT (Data, Variable, Absolute) */
+  0x95, 0x01,	    /*   REPORT_COUNT (1) */
+  0x75, 0x08,	    /*   REPORT_SIZE (8) */
+  0x81, 0x01,	    /*   INPUT (Constant) */
+  0x95, 0x05,	    /*   REPORT_COUNT (5) */
+  0x75, 0x01,	    /*   REPORT_SIZE (1) */
+  0x05, 0x08,	    /*   USAGE_PAGE (LED) */
+  0x19, 0x01,	    /*   USAGE_MINIMUM (Num Lock) */
+  0x29, 0x05,	    /*   USAGE_MAXIMUM (Kana) */
+  0x91, 0x02,	    /*   OUTPUT (Data, Variable, Absolute) */
+  0x95, 0x01,	    /*   REPORT_COUNT (1) */
+  0x75, 0x03,	    /*   REPORT_SIZE (3) */
+  0x91, 0x01,	    /*   OUTPUT (Constant) */
+  0x95, 0x06,	    /*   REPORT_COUNT (6) */
+  0x75, 0x08,	    /*   REPORT_SIZE (8) */
+  0x15, 0x00,	    /*   LOGICAL_MINIMUM (0) */
+  0x26, 0xe7, 0x00, /*   LOGICAL_MAXIMUM (231) */
+  0x05, 0x07,	    /*   USAGE_PAGE (Keyboard/Keypad) */
+  0x19, 0x00,	    /*   USAGE_MINIMUM (Reserved (no event detected)) */
+  0x29, 0xe7,	    /*   USAGE_MAXIMUM (Keyboard Right GUI) */
+  0x81, 0x00,	    /*   INPUT (Data, Array, Absolute) */
+  0xc0		    /* END_COLLECTION */
+};
+
+/* Mouse HID report descriptor. */
+#define MOUSE_HID_REPORT_DESC_SIZE (sizeof(mouse_report_desc))
+
+static const uint8_t mouse_report_desc[] = {
+  0x05, 0x01,	    /* USAGE_PAGE (Generic Desktop) */
+  0x09, 0x02,	    /* USAGE (Mouse) */
+  0xa1, 0x01,	    /* COLLECTION (Application) */
+  0x09, 0x01,	    /*   USAGE (Pointer) */
+  0xa1, 0x00,	    /*   COLLECTION (Physical) */
+  0x95, 0x03,	    /*     REPORT_COUNT (3) */
+  0x75, 0x01,	    /*     REPORT_SIZE (1) */
+  0x05, 0x09,	    /*     USAGE_PAGE (Buttons) */
+  0x19, 0x01,	    /*     USAGE_MINIMUM (Button 1) */
+  0x29, 0x03,	    /*     USAGE_MAXIMUM (Button 3) */
+  0x15, 0x00,	    /*     LOGICAL_MINIMUM (0) */
+  0x25, 0x01,	    /*     LOGICAL_MAXIMUM (1) */
+  0x81, 0x02,	    /*     INPUT (Data, Variable, Absolute) */
+  0x95, 0x01,	    /*     REPORT_COUNT (1) */
+  0x75, 0x05,	    /*     REPORT_SIZE (5) */
+  0x81, 0x01,	    /*     INPUT (Constant) */
+  0x75, 0x08,	    /*     REPORT_SIZE (8) */
+  0x95, 0x03,	    /*     REPORT_COUNT (3) */
+  0x05, 0x01,	    /*     USAGE_PAGE (Generic Desktop) */
+  0x09, 0x30,	    /*     USAGE (X) */
+  0x09, 0x31,	    /*     USAGE (Y) */
+  0x09, 0x38,	    /*     USAGE (Wheel) */
+  0x15, 0x81,	    /*     LOGICAL_MINIMUM (-127) */
+  0x25, 0x7f,	    /*     LOGICAL_MAXIMUM (127) */
+  0x81, 0x06,	    /*     INPUT (Data, Variable, Relative) */
+  /* TODO AC Pan? */
+  0xc0,		    /*   END_COLLECTION */
+  0xc0		    /* END_COLLECTION */
+};
+
 /* USB Standard Device Descriptor */
 #if !defined(GNU_LINUX_EMULATION)
 static const
@@ -39,7 +111,9 @@ uint8_t device_desc[] = {
 #define VCOM_TOTAL_LENGTH   0
 #endif
 
-#define TOTAL_LENGTH (9+VCOM_TOTAL_LENGTH)
+#define HID_TOTAL_LENGTH (9+9+7)
+
+#define TOTAL_LENGTH (9+HID_TOTAL_LENGTH*2+VCOM_TOTAL_LENGTH)
 
 
 /* Configuation Descriptor */
@@ -52,6 +126,62 @@ static const uint8_t config_desc[] = {
   0x00,   /* iConfiguration: Index of string descriptor describing the configuration */
   USB_INITIAL_FEATURE,  /* bmAttributes*/
   50,	  /* MaxPower 100 mA */
+
+  /* Interface Descriptor */
+  9,			      /* bLength: Interface Descriptor size */
+  INTERFACE_DESCRIPTOR,	      /* bDescriptorType: Interface */
+  HID_INTERFACE_0,	 /* bInterfaceNumber: Index of Interface */
+  0x00,		  /* bAlternateSetting: Alternate setting */
+  0x01,		  /* bNumEndpoints: One endpoints used */
+  0x03,		  /* bInterfaceClass: HID Class */
+  0x01,		  /* bInterfaceSubClass: Boot interface subclass */
+  0x01,		  /* bInterfaceProtocol: Keyboard */
+  0x00,		  /* iInterface: */
+
+  /* HID Descriptor */
+  9,	        /* bLength: HID Descriptor size */
+  0x21,	        /* bDescriptorType: HID */
+  0x10, 0x01,   /* bcdHID: HID Class Spec release number */
+  0x00,	        /* bCountryCode: Hardware target country */
+  0x01,         /* bNumDescriptors: Number of HID class descriptors to follow */
+  0x22,         /* bDescriptorType */
+  W_LENGTH(KEYB_HID_REPORT_DESC_SIZE), /* wItemLength: Total length of Report descriptor */
+
+  /*Endpoint IN1 Descriptor*/
+  7,                            /* bLength: Endpoint Descriptor size */
+  ENDPOINT_DESCRIPTOR,		/* bDescriptorType: Endpoint */
+  0x81,				/* bEndpointAddress: (IN1) */
+  0x03,				/* bmAttributes: Interrupt */
+  W_LENGTH(8),			/* wMaxPacketSize: 8 */
+  0x0A,				/* bInterval (10ms) */
+
+  /* Interface Descriptor */
+  9,			      /* bLength: Interface Descriptor size */
+  INTERFACE_DESCRIPTOR,	      /* bDescriptorType: Interface */
+  HID_INTERFACE_1,	 /* bInterfaceNumber: Index of Interface */
+  0x00,		  /* bAlternateSetting: Alternate setting */
+  0x01,		  /* bNumEndpoints: One endpoints used */
+  0x03,		  /* bInterfaceClass: HID Class */
+  0x01,		  /* bInterfaceSubClass: Boot interface subclass */
+  0x02,		  /* bInterfaceProtocol: Mouse */
+  0x00,		  /* iInterface: */
+
+  /* HID Descriptor */
+  9,	        /* bLength: HID Descriptor size */
+  0x21,	        /* bDescriptorType: HID */
+  0x10, 0x01,   /* bcdHID: HID Class Spec release number */
+  0x00,	        /* bCountryCode: Hardware target country */
+  0x01,         /* bNumDescriptors: Number of HID class descriptors to follow */
+  0x22,         /* bDescriptorType */
+  W_LENGTH(MOUSE_HID_REPORT_DESC_SIZE), /* wItemLength: Total length of Report descriptor */
+
+  /*Endpoint IN1 Descriptor*/
+  7,                            /* bLength: Endpoint Descriptor size */
+  ENDPOINT_DESCRIPTOR,		/* bDescriptorType: Endpoint */
+  0x82,				/* bEndpointAddress: (IN2) */
+  0x03,				/* bmAttributes: Interrupt */
+  W_LENGTH(8),			/* wMaxPacketSize: 8 */
+  0x0A,				/* bInterval (10ms) */
 
 #ifdef ENABLE_VIRTUAL_COM_PORT
   /* Interface Association Descriptor */
@@ -159,6 +289,10 @@ static const struct desc string_descriptors[] = {
 };
 #define NUM_STRING_DESC (sizeof (string_descriptors) / sizeof (struct desc))
 
+#define USB_DT_HID			0x21
+#define USB_DT_REPORT			0x22
+#define USB_DT_PHYSICAL			0x23
+
 int
 usb_get_descriptor (struct usb_dev *dev)
 {
@@ -199,6 +333,33 @@ usb_get_descriptor (struct usb_dev *dev)
 	    }
 #endif
 	}
+    }
+  else if (rcp == INTERFACE_RECIPIENT)
+    {
+      if (arg->index == HID_INTERFACE_0)
+        {
+          /* arg->index is the interface number, desc_type is descriptor
+           * type, desc_index is descriptor index (0 except for physical
+           * descriptors
+           */
+	  if (desc_type == USB_DT_HID)
+	    return usb_lld_ctrl_send (dev, config_desc+9+9, 9);
+	  else if (desc_type == USB_DT_REPORT)
+	    return usb_lld_ctrl_send (dev, keyb_report_desc,
+				      KEYB_HID_REPORT_DESC_SIZE);
+        }
+      else if (arg->index == HID_INTERFACE_1)
+        {
+          /* arg->index is the interface number, desc_type is descriptor
+           * type, desc_index is descriptor index (0 except for physical
+           * descriptors
+           */
+	  if (desc_type == USB_DT_HID)
+	    return usb_lld_ctrl_send (dev, config_desc+9+9+9+7+9, 9);
+	  else if (desc_type == USB_DT_REPORT)
+	    return usb_lld_ctrl_send (dev, mouse_report_desc,
+				      MOUSE_HID_REPORT_DESC_SIZE);
+        }
     }
 
   return -1;
