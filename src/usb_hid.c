@@ -51,7 +51,7 @@ int hid_data_setup(struct usb_dev *dev, uint16_t interface)
 		return usb_lld_ctrl_recv (dev, &hid_idle_rate, 1);
 		*/
 		hid_idle_rate = (dev->dev_req.value >> 8) & 0xff;
-		return 0;
+		return usb_lld_ctrl_ack (dev);
 
 	case USB_HID_REQ_GET_REPORT:
 		if (((dev->dev_req.value >> 8) & 0xFF) == 1)
@@ -70,7 +70,7 @@ int hid_data_setup(struct usb_dev *dev, uint16_t interface)
 		return usb_lld_ctrl_recv (dev, &hid_protocol, 1);
 		*/
 		hid_protocol = dev->dev_req.value & 0xff;
-		return 0;
+		return usb_lld_ctrl_ack (dev);
 
 	default:
 		return -1;
