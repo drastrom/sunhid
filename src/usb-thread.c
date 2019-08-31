@@ -38,6 +38,8 @@ struct stdout stdout;
 #include "usb_lld.h"
 #include "usb_conf.h"
 
+#include "usb_hid.h"
+
 /* shit from gnuk.h */
 #define LED_FINISH_COMMAND	128
 #define LED_OFF	 LED_FINISH_COMMAND
@@ -69,8 +71,12 @@ usb_rx_ready (uint8_t ep_num, uint16_t len)
 static void
 usb_tx_done (uint8_t ep_num, uint16_t len)
 {
+  if (ep_num == ENDP1 || ep_num == ENDP2)
+    {
+      hid_tx_done (ep_num, len);
+    }
 #ifdef DEBUG
-  if (ep_num == ENDP3)
+  else if (ep_num == ENDP3)
     {
       chopstx_mutex_lock (&stdout.m_dev);
       chopstx_cond_signal (&stdout.cond_dev);

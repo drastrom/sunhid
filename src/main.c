@@ -200,6 +200,8 @@ extern void *usb_thread (void *arg);
 
 extern uint32_t bDeviceState;
 
+extern void hid_init(void);
+extern void serial_init(void);
 #ifdef DEBUG
 extern void stdout_init(void);
 #endif
@@ -303,6 +305,8 @@ main (int argc, const char *argv[])
   stdout_init ();
 #endif
 
+  hid_init();
+
   usb_thd = chopstx_create (PRIO_USB, STACK_ADDR_USB, STACK_SIZE_USB,
 			     usb_thread, NULL);
 
@@ -316,6 +320,7 @@ main (int argc, const char *argv[])
       chopstx_usec_wait (250*1000);
     }
 
+  serial_init();
   eventflag_prepare_poll (&led_event, &led_event_poll_desc);
 
   while (1)

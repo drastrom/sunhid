@@ -8,7 +8,8 @@ CHOPSTX = ../chopstx
 CSRC = main.c crc32.c \
 	usb_desc.c usb_ctrl.c \
 	usb-thread.c usb_hid.c \
-	usart-stm32f103.c
+	usart-stm32f103.c serial.c \
+	sun_xlate.c
 
 INCDIR =
 

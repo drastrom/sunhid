@@ -274,10 +274,14 @@ usb_ctrl_write_finish (struct usb_dev *dev)
 #endif
 	}
     }
-#if defined (ENABLE_VIRTUAL_COM_PORT)
   else if (type_rcp == (CLASS_REQUEST | INTERFACE_RECIPIENT))
     {
-      if (arg->index == VCOM_INTERFACE_0 && USB_SETUP_SET (arg->type)
+      if (arg->index == HID_INTERFACE_0 || arg->index == HID_INTERFACE_1)
+        {
+          hid_ctrl_write_finish(dev, arg->index);
+        }
+#if defined (ENABLE_VIRTUAL_COM_PORT)
+      else if (arg->index == VCOM_INTERFACE_0 && USB_SETUP_SET (arg->type)
 	  && arg->request == USB_CDC_REQ_SET_CONTROL_LINE_STATE)
 	{
 	  uint8_t connected_saved = stdout.connected;
@@ -300,8 +304,8 @@ usb_ctrl_write_finish (struct usb_dev *dev)
 	    chopstx_cond_signal (&stdout.cond_dev);
 	  chopstx_mutex_unlock (&stdout.m_dev);
 	}
-    }
 #endif
+    }
 }
 
 

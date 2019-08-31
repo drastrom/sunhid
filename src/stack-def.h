@@ -2,12 +2,13 @@
 #define SIZE_1 4096
 #define SIZE_2 4096
 #define SIZE_3 4096
+#define SIZE_4 4096
 #else
 #define SIZE_0 0x0200 /* Main         */
 #define SIZE_1 0x0200 /* USB          */
-#define SIZE_2 0x0200
-#define SIZE_3 0x0200
-#define SIZE_4 0x0200
+#define SIZE_2 0x0200 /* USART        */
+#define SIZE_3 0x0200 /* Keyboard     */
+#define SIZE_4 0x0200 /* Mouse        */
 #define SIZE_5 0x0200
 #define SIZE_6 0x0200
 #define SIZE_7 0x0200
