@@ -179,11 +179,15 @@ int hid_key_released(uint8_t hidcode)
 	chopstx_mutex_lock(&hid_locks[0].tx_mut);
 	if (hidcode >= 0xe0 && hidcode <= 0xe7)
 	{
-		uint8_t mask = (1 << (hidcode-0xe0));
+		uint8_t mask = 1 << (hidcode-0xe0);
 		if (keyb_hid_report.modifiers & mask)
 		{
 			keyb_hid_report.modifiers &= ~mask;
 			ret = 1;
+		}
+		else
+		{
+			ret = -1;
 		}
 	}
 	else
@@ -201,6 +205,10 @@ int hid_key_released(uint8_t hidcode)
 		{
 			keyb_hid_report.keycodes[slot] = 0;
 			ret = 1;
+		}
+		else
+		{
+			ret = -1;
 		}
 	}
 
