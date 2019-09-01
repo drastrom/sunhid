@@ -50,7 +50,9 @@ mouse_main(void *arg)
 	chopstx_usec_wait(250*1000);
 	while (usart_read(2, (char *)&read_byte, 1))
 	{
+#ifdef DEBUG
 		//put_byte_with_no_nl(read_byte);
+#endif
 		/* TODO */
 	}
 	return NULL;
@@ -68,7 +70,9 @@ keyboard_main(void *arg)
 	while (usart_read(3, (char *)&read_byte, 1))
 	{
 		uint8_t hidcode;
+#ifdef DEBUG
 		put_byte_with_no_nl(read_byte);
+#endif
 		switch (read_byte)
 		{
 		case 0xff: /* reset response */
