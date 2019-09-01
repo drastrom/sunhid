@@ -10,6 +10,7 @@
 #include "stm32f103_local.h"
 
 #include "sun_xlate.h"
+#include "usb_hid.h"
 
 extern void _write (const char *s, int len);
 #ifdef DEBUG
@@ -66,24 +67,36 @@ keyboard_main(void *arg)
 	usart_write(3, (char *)&read_byte, 1);
 	while (usart_read(3, (char *)&read_byte, 1))
 	{
+		uint8_t hidcode;
 		put_byte_with_no_nl(read_byte);
-		if (read_byte == 0xff) /* POST */
+		switch (read_byte)
 		{
+		case 0xff: /* reset response */
 			usart_read(3, (char *)&read_byte, 1);
 			/* better be 4 */
 			//assert(read_byte == 0x04);
-		}
-		else if (read_byte == 0xfe)
-		{
-		}
-		else if (read_byte == 0x7f) /* Idle */
-		{
-		}
-		else if (read_byte & 0x80) /* Break */
-		{
-		}
-		else /* Make */
-		{
+			break;
+		case 0xfe: /* Layout request reponse */
+			usart_read(3, (char *)&read_byte, 1);
+			/* layout dip switches */
+			break;
+		case 0x7e: /* Failed self-test */
+			usart_read(3, (char *)&read_byte, 1);
+			/* better be 1 */
+			//assert(read_byte == 0x01);
+			break;
+		case 0x7f: /* Idle */
+			hid_key_releaseAll();
+			break;
+		default:
+			hidcode = sun2hid_keycode(read_byte);
+			if (hidcode != 0)
+			{
+				if (read_byte & 0x80)
+					hid_key_released(hidcode);
+				else
+					hid_key_pressed(hidcode);
+			}
 		}
 	}
 	return NULL;
@@ -97,7 +110,7 @@ void keyboard_set_leds(uint8_t hid_leds)
 
 void serial_init(void)
 {
-	// blue pill board.h initialized GPIOA and GPIOC, but we need to do GPIOB
+	/* blue pill board.h initialized GPIOA and GPIOC, but we need to do GPIOB */
 	RCC->APB2RSTR = RCC_APB2RSTR_IOPBRST;
 	RCC->APB2RSTR = 0;
 	RCC->APB2ENR |= RCC_APB2ENR_IOPBEN;

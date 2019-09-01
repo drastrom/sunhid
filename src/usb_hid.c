@@ -119,6 +119,111 @@ void hid_tx_done(uint8_t ep_num, uint16_t len)
 	chopstx_mutex_unlock (&locks->tx_mut);
 }
 
+static void hid_keyb_write(void)
+{
+#ifdef GNU_LINUX_EMULATION
+	usb_lld_tx_enable_buf (ENDP1, &keyb_hid_report, sizeof(keyb_hid_report));
+#else
+	usb_lld_write (ENDP1, &keyb_hid_report, sizeof(keyb_hid_report));
+#endif
+	chopstx_cond_wait (&hid_locks[0].tx_cond, &hid_locks[0].tx_mut);
+}
+
+int hid_key_pressed(uint8_t hidcode)
+{
+	int ret = 0;
+	chopstx_mutex_lock(&hid_locks[0].tx_mut);
+	if (hidcode >= 0xe0 && hidcode <= 0xe7)
+	{
+		uint8_t mask = 1 << (hidcode-0xe0);
+		if (!(keyb_hid_report.modifiers & mask))
+		{
+			keyb_hid_report.modifiers |= mask;
+			ret = 1;
+		}
+	}
+	else
+	{
+		int slot = -1;
+		int i;
+		for (i = 0; i < 6; ++i)
+		{
+			if (keyb_hid_report.keycodes[i] == 0)
+				slot = i;
+			else if (keyb_hid_report.keycodes[i] == hidcode)
+				break;
+		}
+		if (i == 6)
+		{
+			if (slot == -1)
+			{
+				ret = -1;
+			}
+			else
+			{
+				keyb_hid_report.keycodes[slot] = hidcode;
+				ret = 1;
+			}
+		}
+	}
+
+	if (ret == 1)
+		hid_keyb_write();
+	chopstx_mutex_unlock(&hid_locks[0].tx_mut);
+	return ret;
+}
+
+int hid_key_released(uint8_t hidcode)
+{
+	int ret = 0;
+	chopstx_mutex_lock(&hid_locks[0].tx_mut);
+	if (hidcode >= 0xe0 && hidcode <= 0xe7)
+	{
+		uint8_t mask = (1 << (hidcode-0xe0));
+		if (keyb_hid_report.modifiers & mask)
+		{
+			keyb_hid_report.modifiers &= ~mask;
+			ret = 1;
+		}
+	}
+	else
+	{
+		int slot = -1;
+		for (int i = 0; i < 6; ++i)
+		{
+			if (keyb_hid_report.keycodes[i] == hidcode)
+			{
+				slot = i;
+				break;
+			}
+		}
+		if (slot != -1)
+		{
+			keyb_hid_report.keycodes[slot] = 0;
+			ret = 1;
+		}
+	}
+
+	if (ret == 1)
+		hid_keyb_write();
+	chopstx_mutex_unlock(&hid_locks[0].tx_mut);
+	return ret;
+}
+
+int hid_key_releaseAll(void)
+{
+	int ret = 0;
+	chopstx_mutex_lock(&hid_locks[0].tx_mut);
+	if (keyb_hid_report.raw != 0)
+	{
+		ret = 1;
+		keyb_hid_report.raw = 0;
+		hid_keyb_write();
+	}
+	chopstx_mutex_unlock(&hid_locks[0].tx_mut);
+	return ret;
+}
+
 int hid_data_setup(struct usb_dev *dev, uint16_t interface)
 {
 	switch (dev->dev_req.request)
