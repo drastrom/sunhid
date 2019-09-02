@@ -45,15 +45,32 @@ static int my_callback (uint8_t dev_no, uint16_t notify_bits)
 static void *
 mouse_main(void *arg)
 {
+	int8_t buf[4];
+	struct {
+	       uint8_t idx:3;
+	       uint8_t buttons_changed:1;
+	} state = {0, 0};
 	uint8_t read_byte;
 	(void)arg;
 	chopstx_usec_wait(250*1000);
 	while (usart_read(2, (char *)&read_byte, 1))
 	{
 #ifdef DEBUG
-		//put_byte_with_no_nl(read_byte);
+		put_byte_with_no_nl(read_byte);
 #endif
-		/* TODO */
+		if ((read_byte & 0xF8) == 0x80)
+		{
+			state.buttons_changed = hid_mouse_set_buttons(sun2hid_mousebuttons(read_byte)) > 0;
+			state.idx = 0;
+		}
+		else if (state.idx < 4)
+		{
+			buf[state.idx++] = read_byte;
+			if (state.idx == 2 && (state.buttons_changed || buf[0] != 0 || buf[1] != 0))
+				hid_mouse_move(buf[0], -buf[1]);
+			else if (state.idx == 4 && (buf[2] != 0 || buf[3] != 0))
+				hid_mouse_move(buf[2], -buf[3]);
+		}
 	}
 	return NULL;
 }
@@ -71,7 +88,7 @@ keyboard_main(void *arg)
 	{
 		uint8_t hidcode;
 #ifdef DEBUG
-		put_byte_with_no_nl(read_byte);
+		//put_byte_with_no_nl(read_byte);
 #endif
 		switch (read_byte)
 		{

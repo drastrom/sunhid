@@ -73,15 +73,38 @@ static const uint8_t mouse_report_desc[] = {
   0x75, 0x05,	    /*     REPORT_SIZE (5) */
   0x81, 0x01,	    /*     INPUT (Constant) */
   0x75, 0x08,	    /*     REPORT_SIZE (8) */
+#if defined(MOUSE_WHEEL)
   0x95, 0x03,	    /*     REPORT_COUNT (3) */
+#else
+  0x95, 0x02,	    /*     REPORT_COUNT (2) */
+#endif
   0x05, 0x01,	    /*     USAGE_PAGE (Generic Desktop) */
   0x09, 0x30,	    /*     USAGE (X) */
   0x09, 0x31,	    /*     USAGE (Y) */
+#if defined(MOUSE_WHEEL)
   0x09, 0x38,	    /*     USAGE (Wheel) */
+#endif
   0x15, 0x81,	    /*     LOGICAL_MINIMUM (-127) */
   0x25, 0x7f,	    /*     LOGICAL_MAXIMUM (127) */
   0x81, 0x06,	    /*     INPUT (Data, Variable, Relative) */
-  /* TODO AC Pan? */
+#if defined(MOUSE_PAN)
+  0x75, 0x08,	    /*     REPORT_SIZE (8) */
+  0x95, 0x01,	    /*     REPORT_COUNT (1) */
+  0x05, 0x0c,	    /*     USAGE_PAGE (Consumer Devices) */
+  0x0a, 0x38, 0x02  /*     USAGE (AC Pan) */
+  0x15, 0x81,	    /*     LOGICAL_MINIMUM (-127) */
+  0x25, 0x7f,	    /*     LOGICAL_MAXIMUM (127) */
+  0x81, 0x06,	    /*     INPUT (Data, Variable, Relative) */
+#endif
+  0x75, 0x08,	    /*     REPORT_SIZE (8) */
+#if defined(MOUSE_WHEEL) && defined(MOUSE_PAN)
+  0x95, 0x03,	    /*     REPORT_COUNT (3) */
+#elif defined(MOUSE_WHEEL) || defined(MOUSE_PAN)
+  0x95, 0x04,	    /*     REPORT_COUNT (4) */
+#else
+  0x95, 0x05,	    /*     REPORT_COUNT (5) */
+#endif
+  0x81, 0x01,	    /*     INPUT (Constant) */
   0xc0,		    /*   END_COLLECTION */
   0xc0		    /* END_COLLECTION */
 };

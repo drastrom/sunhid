@@ -154,5 +154,12 @@ uint8_t sun2hid_keycode(uint8_t sun_keycode)
 	return sun2usb[sun_keycode & 0x7F];
 }
 
+uint8_t sun2hid_mousebuttons(uint8_t sun_buttons)
+{
+	sun_buttons = ~sun_buttons;
+	return  ((sun_buttons & 4) >> 2) |
+		((sun_buttons & 3) << 1);
+}
+
 
 /* vim: set foldmethod=marker :*/

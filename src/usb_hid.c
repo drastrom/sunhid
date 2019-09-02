@@ -72,18 +72,35 @@ static union mouse_hid_report
 	uint64_t raw;
 	struct {
 		union {
-			uint8_t buttons;
+			uint8_t raw_buttons;
 			struct {
 				uint8_t button1:1;
 				uint8_t button2:1;
 				uint8_t button3:1;
 				uint8_t reserved1:5;
 			};
+			struct {
+				uint8_t buttons:3;
+				uint8_t reserved2:5;
+			};
 		};
-		uint8_t x;
-		uint8_t y;
-		uint8_t wheel;
-		uint8_t reserved[4];
+		int8_t x;
+		int8_t y;
+#ifdef MOUSE_WHEEL
+		int8_t wheel;
+#endif
+#ifdef MOUSE_PAN
+		int8_t pan;
+#endif
+		uint8_t reserved[
+#if defined(MOUSE_WHEEL) && defined(MOUSE_PAN)
+			3
+#elif defined(MOUSE_WHEEL) || defined(MOUSE_PAN)
+			4
+#else
+			5
+#endif
+			];
 	};
 } mouse_hid_report;
 
@@ -229,6 +246,103 @@ int hid_key_releaseAll(void)
 		hid_keyb_write();
 	}
 	chopstx_mutex_unlock(&hid_locks[0].tx_mut);
+	return ret;
+}
+
+static void hid_mouse_write(void)
+{
+#ifdef GNU_LINUX_EMULATION
+	usb_lld_tx_enable_buf (ENDP2, &mouse_hid_report, sizeof(mouse_hid_report));
+#else
+	usb_lld_write (ENDP2, &mouse_hid_report, sizeof(mouse_hid_report));
+#endif
+	chopstx_cond_wait (&hid_locks[1].tx_cond, &hid_locks[1].tx_mut);
+}
+
+int hid_mouse_move(int8_t x, int8_t y)
+{
+	int ret = 0;
+	chopstx_mutex_lock(&hid_locks[1].tx_mut);
+	mouse_hid_report.x = x;
+	mouse_hid_report.y = y;
+#if defined(MOUSE_WHEEL)
+	mouse_hid_report.wheel = 0;
+#endif
+#if defined(MOUSE_PAN)
+	mouse_hid_report.pan = 0;
+#endif
+	hid_mouse_write();
+	ret = 1;
+	chopstx_mutex_unlock(&hid_locks[1].tx_mut);
+	return ret;
+}
+
+int hid_mouse_set_buttons(uint8_t buttons)
+{
+	int ret = 0;
+	buttons &= 0x7;
+	chopstx_mutex_lock(&hid_locks[1].tx_mut);
+	if (mouse_hid_report.buttons != buttons)
+	{
+		mouse_hid_report.buttons = buttons;
+		mouse_hid_report.x = 0;
+		mouse_hid_report.y = 0;
+#if defined(MOUSE_WHEEL)
+		mouse_hid_report.wheel = 0;
+#endif
+#if defined(MOUSE_PAN)
+		mouse_hid_report.pan = 0;
+#endif
+		//hid_mouse_write();
+		ret = 1;
+	}
+	chopstx_mutex_unlock(&hid_locks[1].tx_mut);
+	return ret;
+}
+
+int hid_mouse_button_press(uint8_t button)
+{
+	int ret = 0;
+	uint8_t mask = 1 << button;
+	chopstx_mutex_lock(&hid_locks[1].tx_mut);
+	if (!(mouse_hid_report.buttons & mask))
+	{
+		mouse_hid_report.buttons |= mask;
+		mouse_hid_report.x = 0;
+		mouse_hid_report.y = 0;
+#if defined(MOUSE_WHEEL)
+		mouse_hid_report.wheel = 0;
+#endif
+#if defined(MOUSE_PAN)
+		mouse_hid_report.pan = 0;
+#endif
+		hid_mouse_write();
+		ret = 1;
+	}
+	chopstx_mutex_unlock(&hid_locks[1].tx_mut);
+	return ret;
+}
+
+int hid_mouse_button_release(uint8_t button)
+{
+	int ret = 0;
+	uint8_t mask = 1 << button;
+	chopstx_mutex_lock(&hid_locks[1].tx_mut);
+	if (mouse_hid_report.buttons & mask)
+	{
+		mouse_hid_report.buttons &= ~mask;
+		mouse_hid_report.x = 0;
+		mouse_hid_report.y = 0;
+#if defined(MOUSE_WHEEL)
+		mouse_hid_report.wheel = 0;
+#endif
+#if defined(MOUSE_PAN)
+		mouse_hid_report.pan = 0;
+#endif
+		hid_mouse_write();
+		ret = 1;
+	}
+	chopstx_mutex_unlock(&hid_locks[1].tx_mut);
 	return ret;
 }
 
