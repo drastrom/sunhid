@@ -359,10 +359,14 @@ int hid_data_setup(struct usb_dev *dev, uint16_t interface)
 	case USB_HID_REQ_GET_REPORT:
 		if (((dev->dev_req.value >> 8) & 0xFF) == 1)
 		{
+			int ret;
+			chopstx_mutex_lock(&hid_locks[interface - HID_INTERFACE_0].tx_mut);
 			if (interface == HID_INTERFACE_0)
-				return usb_lld_ctrl_send (dev, &keyb_hid_report, sizeof(keyb_hid_report));
+				ret = usb_lld_ctrl_send (dev, &keyb_hid_report, sizeof(keyb_hid_report));
 			else /*if (interface == HID_INTERFACE_1)*/
-				return usb_lld_ctrl_send (dev, &mouse_hid_report, sizeof(mouse_hid_report));
+				ret = usb_lld_ctrl_send (dev, &mouse_hid_report, sizeof(mouse_hid_report));
+			chopstx_mutex_unlock(&hid_locks[interface - HID_INTERFACE_0].tx_mut);
+			return ret;
 		}
 		return -1;
 
