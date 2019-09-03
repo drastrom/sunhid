@@ -118,13 +118,21 @@ void hid_setup_endpoints(struct usb_dev *dev,
 #endif
 
 	if (!stop)
+	{
 #ifdef GNU_LINUX_EMULATION
 		usb_lld_setup_endp (dev, endpoint_info[interface - HID_INTERFACE_0].ep_num, 0, 1);
 #else
 		usb_lld_setup_endpoint (endpoint_info[interface - HID_INTERFACE_0].ep_num, EP_INTERRUPT, 0, 0, endpoint_info[interface - HID_INTERFACE_0].tx_addr, 0);
 #endif
+		/* Spec says should default to report protocol (1) on intialization
+		 * This seems like as good a place for intialization as any */
+		hid_info[interface - HID_INTERFACE_0].hid_idle_rate = 0;
+		hid_info[interface - HID_INTERFACE_0].hid_protocol = 1;
+	}
 	else
+	{
 		usb_lld_stall_tx (endpoint_info[interface - HID_INTERFACE_0].ep_num);
+	}
 }
 
 void hid_tx_done(uint8_t ep_num, uint16_t len)
