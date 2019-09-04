@@ -47,7 +47,7 @@ static const uint8_t keyb_report_desc[] = {
   0x26, 0xe7, 0x00, /*   LOGICAL_MAXIMUM (231) */
   0x05, 0x07,	    /*   USAGE_PAGE (Keyboard/Keypad) */
   0x19, 0x00,	    /*   USAGE_MINIMUM (Reserved (no event detected)) */
-  0x2a, 0xe7, 0x00, /*   USAGE_MAXIMUM (Keyboard Right GUI) */
+  0x29, 0xe7,	    /*   USAGE_MAXIMUM (Keyboard Right GUI) */
   0x81, 0x00,	    /*   INPUT (Data, Array, Absolute) */
   0xc0		    /* END_COLLECTION */
 };
