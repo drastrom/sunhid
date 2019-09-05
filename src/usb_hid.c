@@ -183,6 +183,13 @@ int hid_key_pressed(uint8_t hidcode)
 			if (slot == -1)
 			{
 				ret = -1;
+				/* TODO overflow - USB_ERR_OVF in all slots.
+				 * But, if I do that, I lose all of the keys
+				 * that are down.  I would have to track all
+				 * key states elsewhere, so I could recover
+				 * from USB_ERR_OVF properly.  See Appendix C
+				 * of HID 1.11 spec.
+				 */
 			}
 			else
 			{
