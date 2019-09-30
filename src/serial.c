@@ -5,7 +5,7 @@
 
 #include "config.h"
 #include "board.h"
-#include "usart.h"
+#include <contrib/usart.h>
 
 #include "stm32f103_local.h"
 
@@ -143,6 +143,8 @@ void serial_init(void)
 	GPIOB->CRH = 0x88888A88;
 
 	usart_init(PRIO_USART, STACK_ADDR_USART, STACK_SIZE_USART, my_callback);
+	usart_config(2, B1200 | CS8 | STOP2B);
+	usart_config(3, B1200 | CS8 | STOP2B);
 	chopstx_create(PRIO_KEYBOARD, STACK_ADDR_KEYBOARD, STACK_SIZE_KEYBOARD, keyboard_main, NULL);
 	chopstx_create(PRIO_MOUSE, STACK_ADDR_MOUSE, STACK_SIZE_MOUSE, mouse_main, NULL);
 }
