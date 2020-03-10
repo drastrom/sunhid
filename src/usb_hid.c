@@ -29,7 +29,6 @@ static struct hid_info
 static struct hid_locks
 {
 	chopstx_mutex_t tx_mut;
-	chopstx_cond_t  tx_cond;
 } hid_locks[2];
 
 static union keyb_hid_report
@@ -138,10 +137,6 @@ void hid_setup_endpoints(struct usb_dev *dev,
 void hid_tx_done(uint8_t ep_num, uint16_t len)
 {
 	(void)len;
-	struct hid_locks * locks = &hid_locks[(ep_num == ENDP1) ? 0 : 1];
-	chopstx_mutex_lock (&locks->tx_mut);
-	chopstx_cond_signal (&locks->tx_cond);
-	chopstx_mutex_unlock (&locks->tx_mut);
 }
 
 static void hid_keyb_write(void)
@@ -151,7 +146,6 @@ static void hid_keyb_write(void)
 #else
 	usb_lld_write (ENDP1, &keyb_hid_report, sizeof(keyb_hid_report));
 #endif
-	chopstx_cond_wait (&hid_locks[0].tx_cond, &hid_locks[0].tx_mut);
 }
 
 int hid_key_pressed(uint8_t hidcode)
@@ -271,7 +265,6 @@ static void hid_mouse_write(void)
 #else
 	usb_lld_write (ENDP2, &mouse_hid_report, sizeof(mouse_hid_report));
 #endif
-	chopstx_cond_wait (&hid_locks[1].tx_cond, &hid_locks[1].tx_mut);
 }
 
 int hid_mouse_move(int8_t x, int8_t y)
@@ -415,8 +408,5 @@ void hid_ctrl_write_finish(struct usb_dev *dev, uint16_t interface)
 void hid_init(void)
 {
 	for (int i = 0; i < 2; ++i)
-	{
 		chopstx_mutex_init(&hid_locks[i].tx_mut);
-		chopstx_cond_init(&hid_locks[i].tx_cond);
-	}
 }
